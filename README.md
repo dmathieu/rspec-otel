@@ -45,6 +45,11 @@ end
 Several conditions can be added to the matcher:
 
 * `with_attributes` - Will match only the spans with the specified attributes.
-* `with_event` - Will match only the spans with the specified event. This condition can be called multiple times with different events.
+* `without_attributes` - Will only match the spans that do not have the specified attributes
+* `with_event` - Will match only the spans with the specified event.
+* `without_event` - Will only match the spans that do not have the specified event
 * `with_status` - Will match only the spans that have the proper status.
 * `with_exception` - Will match only the spans that have the specified exception event.
+* `without_exception` - Will match only the spans that do not have the specified exception event.
+
+The `*_event` condition can be called multiple times with different events.

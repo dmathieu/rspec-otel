@@ -28,9 +28,24 @@ module RspecOtel
         self
       end
 
+      def without_attributes(attributes)
+        @filters << lambda do |span|
+          !attributes_match?(span.attributes, attributes)
+        end
+
+        self
+      end
+
       def with_event(name, attributes = {})
         @filters << lambda do |span|
           event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
+        end
+        self
+      end
+
+      def without_event(name, attributes = {})
+        @filters << lambda do |span|
+          !event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
         end
         self
       end
@@ -44,6 +59,13 @@ module RspecOtel
 
       def with_exception(exception)
         with_event('exception', {
+                     'exception.type' => exception.class.to_s,
+                     'exception.message' => exception.message
+                   })
+      end
+
+      def without_exception(exception)
+        without_event('exception', {
                      'exception.type' => exception.class.to_s,
                      'exception.message' => exception.message
                    })
