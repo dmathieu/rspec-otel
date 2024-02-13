@@ -1,0 +1,17 @@
+require: 
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: '3.3'
+  NewCops: enable
+  Exclude:
+    - Rakefile
+    - 'vendor/**/*'
+
+Gemspec/RequiredRubyVersion:
+  Enabled: false
+
+Style/Documentation:
+  Enabled: false
