@@ -8,5 +8,6 @@ module RspecOtel
   end
 end
 
+require 'rspec_otel/matchers'
 require 'rspec_otel/rspec'
 require 'rspec_otel/version'
