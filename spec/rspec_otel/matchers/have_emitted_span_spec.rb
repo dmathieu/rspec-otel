@@ -49,6 +49,28 @@ describe RspecOtel::Matchers::HaveEmittedSpan do
     end
   end
 
+  describe 'without_attributes' do
+    it 'matches a span without a specified attribute' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+                            .start_span('test', attributes: {
+                                          'hello' => 'mundo'
+                                        })
+        span.finish
+      end.to have_emitted_span('test').without_attributes({ 'hello' => 'world' })
+    end
+
+    it 'does not match a span with the restricted attributes' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+                            .start_span('test', attributes: {
+                                          'hello' => 'world'
+                                        })
+        span.finish
+      end.not_to have_emitted_span('test').without_attributes({ 'hello' => 'world' })
+    end
+  end
+
   describe 'with_status' do
     it 'matches a span with its status' do
       expect do
@@ -94,6 +116,24 @@ describe RspecOtel::Matchers::HaveEmittedSpan do
     end
   end
 
+  describe 'without_events' do
+    it 'matches a span without a specified event' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.add_event('testing an event')
+        span.finish
+      end.to have_emitted_span('test').without_event('testing')
+    end
+
+    it 'does not match a span with the restricted event' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.add_event('testing an event')
+        span.finish
+      end.not_to have_emitted_span('test').without_event('testing an event')
+    end
+  end
+
   describe 'with exception' do
     it 'matches a span with its exception' do
       expect do
@@ -103,12 +143,46 @@ describe RspecOtel::Matchers::HaveEmittedSpan do
       end.to have_emitted_span('test').with_exception(StandardError.new('some error occured'))
     end
 
+    it 'matches a span with any exception' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.record_exception(StandardError.new('some error occured'))
+        span.finish
+      end.to have_emitted_span('test').with_exception
+    end
+
     it 'does not match a span with a wrong exception' do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
         span.record_exception(StandardError.new('some error occured'))
         span.finish
       end.not_to have_emitted_span('test').with_exception(StandardError.new('an error'))
+    end
+  end
+
+  describe 'without exception' do
+    it 'matches a span without the specified exception' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.record_exception(StandardError.new('some error occured'))
+        span.finish
+      end.to have_emitted_span('test').without_exception(StandardError.new('error'))
+    end
+
+    it 'matches a span with no exception at all' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.record_exception(StandardError.new('some error occured'))
+        span.finish
+      end.not_to have_emitted_span('test').without_exception
+    end
+
+    it 'does not match a span with the exception' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.record_exception(StandardError.new('some error occured'))
+        span.finish
+      end.not_to have_emitted_span('test').without_exception(StandardError.new('some error occured'))
     end
   end
 end
