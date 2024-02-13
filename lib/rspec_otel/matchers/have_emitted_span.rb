@@ -5,15 +5,21 @@ module RspecOtel
     class HaveEmittedSpan
       attr_reader :name
 
-      def initialize(name)
+      def initialize(name = nil)
         @name = name
-        @filters = []
+        @filters = [
+          ->(span) { span.name == name }
+        ]
       end
 
       def matches?(block)
-        block.call if block.respond_to?(:call)
+        before_spans = []
+        if block.respond_to?(:call)
+          before_spans = RspecOtel.exporter.finished_spans
+          block.call
+        end
 
-        RspecOtel.exporter.finished_spans.each do |span|
+        (RspecOtel.exporter.finished_spans - before_spans).each do |span|
           return true if @filters.all? { |f| f.call(span) }
         end
 
