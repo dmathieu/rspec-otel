@@ -14,7 +14,7 @@ module RspecOtel
         block.call if block.respond_to?(:call)
 
         RspecOtel.exporter.finished_spans.each do |span|
-          return true if @filters.all? {|f| f.call(span) }
+          return true if @filters.all? { |f| f.call(span) }
         end
 
         false
@@ -57,18 +57,12 @@ module RspecOtel
         self
       end
 
-      def with_exception(exception)
-        with_event('exception', {
-                     'exception.type' => exception.class.to_s,
-                     'exception.message' => exception.message
-                   })
+      def with_exception(exception = nil)
+        with_event('exception', exception_attributes(exception))
       end
 
-      def without_exception(exception)
-        without_event('exception', {
-                     'exception.type' => exception.class.to_s,
-                     'exception.message' => exception.message
-                   })
+      def without_exception(exception = nil)
+        without_event('exception', exception_attributes(exception))
       end
 
       def failure_message
@@ -84,6 +78,16 @@ module RspecOtel
       end
 
       private
+
+      def exception_attributes(exception)
+        attributes = {}
+        unless exception.nil?
+          attributes['exception.type'] = exception.class.to_s
+          attributes['exception.message'] = exception.message
+        end
+
+        attributes
+      end
 
       def attributes_match?(span_attributes, attributes)
         attributes.each do |ak, av|
@@ -109,7 +113,7 @@ module RspecOtel
             attributes_match?(s.attributes, event.attributes || {})
         end
 
-        return !se.empty?
+        !se.empty?
       end
     end
   end

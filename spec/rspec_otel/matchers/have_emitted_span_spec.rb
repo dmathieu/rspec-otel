@@ -143,6 +143,14 @@ describe RspecOtel::Matchers::HaveEmittedSpan do
       end.to have_emitted_span('test').with_exception(StandardError.new('some error occured'))
     end
 
+    it 'matches a span with any exception' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.record_exception(StandardError.new('some error occured'))
+        span.finish
+      end.to have_emitted_span('test').with_exception
+    end
+
     it 'does not match a span with a wrong exception' do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
@@ -159,6 +167,14 @@ describe RspecOtel::Matchers::HaveEmittedSpan do
         span.record_exception(StandardError.new('some error occured'))
         span.finish
       end.to have_emitted_span('test').without_exception(StandardError.new('error'))
+    end
+
+    it 'matches a span with no exception at all' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.record_exception(StandardError.new('some error occured'))
+        span.finish
+      end.not_to have_emitted_span('test').without_exception
     end
 
     it 'does not match a span with the exception' do
