@@ -16,6 +16,31 @@ describe RspecOtel::Matchers::HaveEmittedSpan do
     end.to have_emitted_span('test')
   end
 
+  it 'has emitted a span from a different name' do
+    expect do
+      span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('testing')
+      span.finish
+    end.not_to have_emitted_span('test')
+  end
+
+  it 'only looks for spans emitted within the block' do
+    span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+    span.finish
+    expect do
+      # Do nothing in here
+    end.not_to have_emitted_span('test')
+  end
+
+  describe 'without a block' do
+    before do
+      span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+      span.finish
+    end
+
+    it { is_expected.to have_emitted_span('test') }
+    it { is_expected.not_to have_emitted_span('testing') }
+  end
+
   describe 'with_attributes' do
     it 'matches a span with its attributes' do
       expect do
