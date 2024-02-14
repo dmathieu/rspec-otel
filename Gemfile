@@ -8,3 +8,7 @@ gem 'rubocop'
 gem 'rubocop-performance'
 gem 'rubocop-rake'
 gem 'rubocop-rspec'
+
+group :development, :test do
+  gem 'rspec'
+end

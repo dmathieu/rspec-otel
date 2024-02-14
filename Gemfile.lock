@@ -4,7 +4,7 @@ PATH
     rspec-otel (0.0.1)
       opentelemetry-api (~> 1.0)
       opentelemetry-sdk (~> 1.0)
-      rspec (~> 3.0)
+      rspec-core (~> 3.0)
 
 GEM
   remote: https://rubygems.org/
@@ -83,6 +83,7 @@ PLATFORMS
 
 DEPENDENCIES
   rake
+  rspec
   rspec-otel!
   rubocop
   rubocop-performance

@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'rspec/core'
-require 'rspec/expectations'
 
 RSpec.configure do |config|
   config.before(:suite) do
