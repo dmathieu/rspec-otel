@@ -28,7 +28,7 @@ end
 
 ### Matching the presence of a span
 
-You can match the emission of a span with the `have_emitted_span` matcher:
+You can match the emission of a span with the `emit_span` matcher:
 
 ```ruby
 require 'spec_helper'
@@ -37,7 +37,7 @@ RSpec.describe 'User API' do
   it 'emits a span' do
     expect do
       get :user, id: 1
-    end.to have_emitted_span('GET /user').with_attributes({'user.id' => '1'})
+    end.to emit_span('GET /user').with_attributes({'user.id' => '1'})
   end
 end
 ```

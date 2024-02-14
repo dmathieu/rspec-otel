@@ -2,7 +2,7 @@
 
 module RspecOtel
   module Matchers
-    class HaveEmittedSpan
+    class EmitSpan
       attr_reader :name
 
       def initialize(name = nil)
