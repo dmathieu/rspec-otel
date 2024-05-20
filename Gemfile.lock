@@ -13,14 +13,14 @@ GEM
     diff-lcs (1.5.1)
     json (2.7.2)
     language_server-protocol (3.17.0.3)
-    opentelemetry-api (1.2.5)
-    opentelemetry-common (0.20.1)
+    opentelemetry-api (1.1.0)
+    opentelemetry-common (0.19.7)
       opentelemetry-api (~> 1.0)
-    opentelemetry-registry (0.3.1)
+    opentelemetry-registry (0.2.0)
       opentelemetry-api (~> 1.1)
-    opentelemetry-sdk (1.4.1)
+    opentelemetry-sdk (1.2.1)
       opentelemetry-api (~> 1.1)
-      opentelemetry-common (~> 0.20)
+      opentelemetry-common (~> 0.19.3)
       opentelemetry-registry (~> 0.2)
       opentelemetry-semantic_conventions
     opentelemetry-semantic_conventions (1.10.0)
@@ -29,11 +29,12 @@ GEM
     parser (3.3.1.0)
       ast (~> 2.4.1)
       racc
-    racc (1.7.3)
+    racc (1.8.0)
     rainbow (3.1.1)
     rake (13.2.1)
-    regexp_parser (2.9.1)
-    rexml (3.2.6)
+    regexp_parser (2.9.2)
+    rexml (3.2.8)
+      strscan (>= 3.0.9)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
@@ -43,10 +44,10 @@ GEM
     rspec-expectations (3.13.0)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
-    rspec-mocks (3.13.0)
+    rspec-mocks (3.13.1)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
-    rspec-support (3.13.0)
+    rspec-support (3.13.1)
     rubocop (1.63.5)
       json (~> 2.3)
       language_server-protocol (>= 3.17.0)
@@ -77,12 +78,11 @@ GEM
     rubocop-rspec_rails (2.28.3)
       rubocop (~> 1.40)
     ruby-progressbar (1.13.0)
+    strscan (3.1.0)
     unicode-display_width (2.5.0)
 
 PLATFORMS
-  arm64-darwin-22
-  arm64-darwin-23
-  x86_64-linux
+  ruby
 
 DEPENDENCIES
   rake
@@ -94,4 +94,4 @@ DEPENDENCIES
   rubocop-rspec
 
 BUNDLED WITH
-   2.4.6
+   2.1.4
