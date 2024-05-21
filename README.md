@@ -53,3 +53,8 @@ Several conditions can be added to the matcher:
 * `without_exception` - Will match only the spans that do not have the specified exception event.
 
 The `*_event` condition can be called multiple times with different events.
+
+## Compatibility
+
+RSpec Otel ensures compatibility with the currently supported versions of the
+[Ruby Language](https://www.ruby-lang.org/en/downloads/branches/).
