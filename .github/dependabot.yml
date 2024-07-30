@@ -4,6 +4,10 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
+  groups:
+    opentelemetry:
+      patterns:
+      - "opentelemetry-*"
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule:
