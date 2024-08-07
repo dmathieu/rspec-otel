@@ -5,11 +5,15 @@ module RspecOtel
     class EmitSpan
       attr_reader :name
 
-      def initialize(name = nil)
+      def initialize(name = nil, root: false)
         @name = name
         @filters = [
           ->(span) { span.name == name }
         ]
+
+        @filters << lambda do |span|
+          span.parent_span_id == OpenTelemetry::Trace::INVALID_SPAN_ID
+        end if root
       end
 
       def matches?(block)
