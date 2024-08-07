@@ -16,6 +16,26 @@ describe RspecOtel::Matchers::EmitSpan do
     end.to emit_span('test')
   end
 
+  it 'has emitted a nested span' do
+    expect do
+      tracer = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+      tracer.in_span("root") do |span|
+        tracer.in_span("child") do |span|
+        end
+      end
+    end.to emit_span('child', root: false)
+  end
+
+  it 'has emitted a root span' do
+    expect do
+      tracer = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+      tracer.in_span("root") do |span|
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_root_span('test')
+        span.finish
+      end
+    end.to emit_span('test', root: true)
+  end
+
   it 'has emitted a span from a different name' do
     expect do
       span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('testing')

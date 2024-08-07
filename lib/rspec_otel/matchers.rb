@@ -2,8 +2,8 @@
 
 module RspecOtel
   module Matchers
-    def emit_span(name)
-      EmitSpan.new(name)
+    def emit_span(name, **attributes)
+      EmitSpan.new(name, **attributes)
     end
   end
 end
