@@ -48,6 +48,8 @@ Several conditions can be added to the matcher:
 * `without_attributes` - Will only match the spans that do not have the specified attributes
 * `with_event` - Will match only the spans with the specified event.
 * `without_event` - Will only match the spans that do not have the specified event
+* `with_link` - Will match only the spans with the specified link.
+* `without_link` - Will only match the spans that do not have the specified link
 * `with_status` - Will match only the spans that have the proper status.
 * `with_exception` - Will match only the spans that have the specified exception event.
 * `without_exception` - Will match only the spans that do not have the specified exception event.
