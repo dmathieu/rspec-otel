@@ -44,6 +44,8 @@ end
 
 Several conditions can be added to the matcher:
 
+* `as_root` - Will match spans that are the root of a trace.
+* `as_child` - Will match spans that are not the root of a trace
 * `with_attributes` - Will match only the spans with the specified attributes.
 * `without_attributes` - Will only match the spans that do not have the specified attributes
 * `with_event` - Will match only the spans with the specified event.
