@@ -210,4 +210,58 @@ describe RspecOtel::Matchers::EmitSpan do
       end.not_to emit_span('test').without_exception(StandardError.new('some error occured'))
     end
   end
+
+  describe 'as_child' do
+    context 'when starting a new trace' do
+      it "doesn't match a child span" do
+        expect do
+          tracer = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+          tracer.in_span('root') do |_span|
+            span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_root_span('another_root')
+            span.finish
+          end
+        end.not_to emit_span('another_root').as_child
+      end
+    end
+
+    context 'when continuing the same trace' do
+      it 'matches a child span' do
+        expect do
+          tracer = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+          tracer.in_span('root') do |_span|
+            tracer.in_span('child') do |span|
+              # noop
+            end
+          end
+        end.to emit_span('child').as_child
+      end
+    end
+  end
+
+  describe 'as_root' do
+    context 'when starting a new trace' do
+      it 'matches a root span' do
+        expect do
+          tracer = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+          tracer.in_span('root') do |_span|
+            span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_root_span('another_root')
+            span.finish
+          end
+        end.to emit_span('another_root').as_root
+      end
+    end
+
+    context 'when continuing the same trace' do
+      it "doesn't match a root span" do
+        expect do
+          tracer = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+          tracer.in_span('root') do |_span|
+            tracer.in_span('child') do |span|
+              # noop
+            end
+          end
+        end.not_to emit_span('child').as_root
+      end
+    end
+  end
 end

@@ -2,7 +2,7 @@
 
 module RspecOtel
   module Matchers
-    class EmitSpan
+    class EmitSpan # rubocop:disable Metrics/ClassLength
       attr_reader :name
 
       def initialize(name = nil)
@@ -24,6 +24,22 @@ module RspecOtel
         end
 
         false
+      end
+
+      def as_child
+        @filters << lambda do |span|
+          span.parent_span_id && span.parent_span_id != OpenTelemetry::Trace::INVALID_SPAN_ID
+        end
+
+        self
+      end
+
+      def as_root
+        @filters << lambda do |span|
+          span.parent_span_id == OpenTelemetry::Trace::INVALID_SPAN_ID
+        end
+
+        self
       end
 
       def with_attributes(attributes)
