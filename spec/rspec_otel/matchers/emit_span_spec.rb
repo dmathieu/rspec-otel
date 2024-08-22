@@ -157,6 +157,13 @@ describe RspecOtel::Matchers::EmitSpan do
         span.finish
       end.not_to emit_span('test').without_event('testing an event')
     end
+
+    it 'matches a span without an event' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.finish
+      end.to emit_span('test').without_event('testing an event')
+    end
   end
 
   describe 'with exception' do
@@ -208,6 +215,82 @@ describe RspecOtel::Matchers::EmitSpan do
         span.record_exception(StandardError.new('some error occured'))
         span.finish
       end.not_to emit_span('test').without_exception(StandardError.new('some error occured'))
+    end
+  end
+
+  describe 'with_link' do
+    it 'matches a span with its link' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+
+        link = OpenTelemetry::Trace::Link.new(span.context, { 'foo' => 'bar' })
+        other_span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test links')
+        other_span.add_link(link)
+        other_span.finish
+
+        span.finish
+      end.to emit_span('test links').with_link({ 'foo' => 'bar' })
+    end
+
+    it 'matches a span with any link' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+
+        link = OpenTelemetry::Trace::Link.new(span.context)
+        other_span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test links')
+        other_span.add_link(link)
+        other_span.finish
+
+        span.finish
+      end.to emit_span('test links').with_link
+    end
+
+    it 'does not match a span with a wrong link' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+
+        link = OpenTelemetry::Trace::Link.new(span.context, { 'foo' => 'bar' })
+        other_span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test links')
+        other_span.add_link(link)
+        other_span.finish
+
+        span.finish
+      end.not_to emit_span('test links').with_link({ 'hello' => 'world' })
+    end
+  end
+
+  describe 'without_link' do
+    it 'matches a span without the specified link' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+
+        link = OpenTelemetry::Trace::Link.new(span.context, { 'foo' => 'bar' })
+        other_span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test links')
+        other_span.add_link(link)
+        other_span.finish
+
+        span.finish
+      end.to emit_span('test links').without_link({ 'hello' => 'world' })
+    end
+
+    it 'matches a span with no link at all' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.finish
+      end.to emit_span('test').without_link
+    end
+
+    it 'does not match a span with the link' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+
+        link = OpenTelemetry::Trace::Link.new(span.context, { 'foo' => 'bar' })
+        other_span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test links')
+        other_span.add_link(link)
+        other_span.finish
+
+        span.finish
+      end.not_to emit_span('test links').without_link({ 'foo' => 'bar' })
     end
   end
 

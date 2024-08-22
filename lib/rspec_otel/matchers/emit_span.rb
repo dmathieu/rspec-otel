@@ -58,17 +58,39 @@ module RspecOtel
         self
       end
 
+      def with_link(attributes = {})
+        @filters << lambda do |span|
+          span.links &&
+            link_match?(span.links, attributes)
+        end
+
+        self
+      end
+
+      def without_link(attributes = {})
+        @filters << lambda do |span|
+          span.links.nil? ||
+            !link_match?(span.links, attributes)
+        end
+
+        self
+      end
+
       def with_event(name, attributes = {})
         @filters << lambda do |span|
-          event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
+          span.events &&
+            event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
         end
+
         self
       end
 
       def without_event(name, attributes = {})
         @filters << lambda do |span|
-          !event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
+          span.events.nil? ||
+            !event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
         end
+
         self
       end
 
@@ -128,14 +150,20 @@ module RspecOtel
       end
 
       def event_match?(span_events, event)
-        return true if span_events.nil?
-
         se = span_events.select do |s|
           s.name == event.name &&
             attributes_match?(s.attributes, event.attributes || {})
         end
 
         !se.empty?
+      end
+
+      def link_match?(links, attributes)
+        link = links.select do |l|
+          attributes_match?(l.attributes, attributes || {})
+        end
+
+        !link.empty?
       end
     end
   end
