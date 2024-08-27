@@ -7,9 +7,9 @@ module RspecOtel
 
       def initialize(name = nil)
         @name = name
-        @filters = [
-          ->(span) { span.name == name }
-        ]
+        @filters = []
+
+        add_name_filter
       end
 
       def matches?(block)
@@ -110,11 +110,11 @@ module RspecOtel
       end
 
       def failure_message
-        "expected span #{name} to have been emitted, but it couldn't be found"
+        "expected span #{failure_match_description} #{printable_name} to have been emitted, but it couldn't be found"
       end
 
       def failure_message_when_negated
-        "expected span #{name} to not have been emitted"
+        "expected span #{failure_match_description} #{printable_name} to not have been emitted"
       end
 
       def supports_block_expectations?
@@ -122,6 +122,35 @@ module RspecOtel
       end
 
       private
+
+      def failure_match_description
+        case name
+        when String
+          'named'
+        when Regexp
+          'matching'
+        end
+      end
+
+      def printable_name
+        case name
+        when String
+          "'#{name}'"
+        when Regexp
+          name.inspect
+        end
+      end
+
+      def add_name_filter
+        @filters << lambda do |span|
+          case name
+          when String
+            span.name == name
+          when Regexp
+            span.name.match?(name)
+          end
+        end
+      end
 
       def exception_attributes(exception)
         attributes = {}
