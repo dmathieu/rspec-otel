@@ -16,6 +16,14 @@ describe RspecOtel::Matchers::EmitSpan do
     end.to emit_span('test')
   end
 
+  it 'only looks for spans emitted within the block' do
+    span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+    span.finish
+    expect do
+      # Do nothing in here
+    end.not_to emit_span('test')
+  end
+
   it 'has emitted a span from a different name' do
     expect do
       span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('testing')
@@ -23,12 +31,40 @@ describe RspecOtel::Matchers::EmitSpan do
     end.not_to emit_span('test')
   end
 
-  it 'only looks for spans emitted within the block' do
-    span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
-    span.finish
+  it 'has printed a sensible error message' do # rubocop:disable RSpec/MultipleExpectations
     expect do
-      # Do nothing in here
-    end.not_to emit_span('test')
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+        span.finish
+      end.to emit_span('GET ')
+    end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+                       "expected span named 'GET ' to have been emitted, but it couldn't be found")
+  end
+
+  context 'when using a regular expression' do
+    it 'has emitted a span with a matching name' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('GET /user')
+        span.finish
+      end.to emit_span(/^GET /)
+    end
+
+    it 'has emitted a span without a matching name' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+        span.finish
+      end.not_to emit_span(/^GET /)
+    end
+
+    it 'has printed a sensible error message' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+          span.finish
+        end.to emit_span(/^GET /)
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+                         "expected span matching /^GET / to have been emitted, but it couldn't be found")
+    end
   end
 
   describe 'without a block' do

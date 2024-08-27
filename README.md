@@ -37,7 +37,21 @@ RSpec.describe 'User API' do
   it 'emits a span' do
     expect do
       get :user, id: 1
-    end.to emit_span('GET /user').with_attributes({'user.id' => '1'})
+    end.to emit_span('GET /user')
+  end
+end
+```
+
+`emit_span` will also match a regular expression:
+
+```ruby
+require 'spec_helper'
+
+RSpec.describe 'User API' do
+  it 'emits a span' do
+    expect do
+      get :user, id: 1
+    end.to emit_span(/^GET /)
   end
 end
 ```
@@ -56,7 +70,8 @@ Several conditions can be added to the matcher:
 * `with_exception` - Will match only the spans that have the specified exception event.
 * `without_exception` - Will match only the spans that do not have the specified exception event.
 
-The `*_event` condition can be called multiple times with different events.
+_The `*_event` condition can be called multiple times with different events._
+
 
 ## Compatibility
 
