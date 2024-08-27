@@ -63,6 +63,28 @@ describe RspecOtel::Matchers::EmitSpan do
       end.to emit_span('test').with_attributes({ 'hello' => 'world' })
     end
 
+    it 'matches a span by attribute keys' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+                            .start_span('test', attributes: {
+                                          'hello' => 'world',
+                                          'holla' => 'mundo'
+                                        })
+        span.finish
+      end.to emit_span('test').with_attributes('hello', 'holla')
+    end
+
+    it 'matches a span by attribute value types' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+                            .start_span('test', attributes: {
+                                          'hello' => 'world',
+                                          'holla' => 1
+                                        })
+        span.finish
+      end.to emit_span('test').with_attributes({ 'hello' => String, 'holla' => Integer })
+    end
+
     it 'does not match a span with wrong attributes' do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel')

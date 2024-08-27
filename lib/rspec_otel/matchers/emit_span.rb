@@ -42,17 +42,17 @@ module RspecOtel
         self
       end
 
-      def with_attributes(attributes)
+      def with_attributes(*attributes)
         @filters << lambda do |span|
-          attributes_match?(span.attributes, attributes)
+          RSpec::Matchers::BuiltIn::Include.new(*attributes).matches?(span.attributes)
         end
 
         self
       end
 
-      def without_attributes(attributes)
+      def without_attributes(*attributes)
         @filters << lambda do |span|
-          !attributes_match?(span.attributes, attributes)
+          !RSpec::Matchers::BuiltIn::Include.new(*attributes).matches?(span.attributes)
         end
 
         self
