@@ -20,6 +20,8 @@ module RspecOtel
         end
 
         (RspecOtel.exporter.finished_spans - before_spans).each do |span|
+          puts span if ENV['RSPEC_OTEL_DEBUG']
+
           return true if @filters.all? { |f| f.call(span) }
         end
 
