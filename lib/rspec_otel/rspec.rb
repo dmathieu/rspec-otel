@@ -3,16 +3,13 @@
 require 'rspec/core'
 
 RSpec.configure do |config|
-  config.before(:suite) do
-    span_processor = OpenTelemetry::SDK::Trace::Export::SimpleSpanProcessor.new(RspecOtel.exporter)
-
-    OpenTelemetry::SDK.configure do |c|
-      c.add_span_processor span_processor
-    end
-  end
-
   config.around(:each) do |example|
-    example.run
-    RspecOtel.exporter.reset
+    if example.metadata[:rspec_otel_disable_tracing]
+      example.run
+    else
+      RspecOtel.record do
+        example.run
+      end
+    end
   end
 end

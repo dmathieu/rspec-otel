@@ -73,6 +73,19 @@ Several conditions can be added to the matcher:
 _The `*_event` condition can be called multiple times with different events._
 
 
+### Disabling
+
+We wrap every example in a new OpenTelemetry SDK configuration by default, if you wish to disable this you can tag your example with `:rspec_otel_disable_tracing`:
+
+```ruby
+require 'spec_helper'
+
+RSpec.describe 'User API', :rspec_otel_disable_tracing do
+  it 'tests my code' do
+    expect(true).to be true
+  end
+end
+
 ## Compatibility
 
 RSpec Otel ensures compatibility with the currently supported versions of the
