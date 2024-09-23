@@ -85,6 +85,7 @@ RSpec.describe 'User API', :rspec_otel_disable_tracing do
     expect(true).to be true
   end
 end
+```
 
 ## Compatibility
 
