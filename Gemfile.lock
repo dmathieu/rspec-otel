@@ -6,6 +6,7 @@ PATH
       opentelemetry-sdk (~> 1.0)
       opentelemetry-test-helpers
       rspec-core (~> 3.0)
+      rspec-expectations (~> 3.0)
 
 GEM
   remote: https://rubygems.org/
