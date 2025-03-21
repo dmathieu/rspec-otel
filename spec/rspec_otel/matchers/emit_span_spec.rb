@@ -38,7 +38,7 @@ describe RspecOtel::Matchers::EmitSpan do
         span.finish
       end.to emit_span('GET ')
     end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-                       "expected span named 'GET ' to have been emitted, but it couldn't be found")
+      "expected span named 'GET ' to have been emitted, but it couldn't be found")
   end
 
   context 'when using a regular expression' do
@@ -63,7 +63,7 @@ describe RspecOtel::Matchers::EmitSpan do
           span.finish
         end.to emit_span(/^GET /)
       end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-                         "expected span matching /^GET / to have been emitted, but it couldn't be found")
+        "expected span matching /^GET / to have been emitted, but it couldn't be found")
     end
   end
 
@@ -82,8 +82,8 @@ describe RspecOtel::Matchers::EmitSpan do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
                             .start_span('test', attributes: {
-                                          'hello' => 'world'
-                                        })
+                              'hello' => 'world'
+                            })
         span.finish
       end.to emit_span('test').with_attributes({ 'hello' => 'world' })
     end
@@ -92,9 +92,9 @@ describe RspecOtel::Matchers::EmitSpan do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
                             .start_span('test', attributes: {
-                                          'hello' => 'world',
-                                          'holla' => 'mundo'
-                                        })
+                              'hello' => 'world',
+                              'holla' => 'mundo'
+                            })
         span.finish
       end.to emit_span('test').with_attributes({ 'hello' => 'world' })
     end
@@ -103,8 +103,8 @@ describe RspecOtel::Matchers::EmitSpan do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
                             .start_span('test', attributes: {
-                                          'hello' => 'monde'
-                                        })
+                              'hello' => 'monde'
+                            })
         span.finish
       end.not_to emit_span('test').with_attributes({ 'hello' => 'world' })
     end
@@ -115,8 +115,8 @@ describe RspecOtel::Matchers::EmitSpan do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
                             .start_span('test', attributes: {
-                                          'hello' => 'mundo'
-                                        })
+                              'hello' => 'mundo'
+                            })
         span.finish
       end.to emit_span('test').without_attributes({ 'hello' => 'world' })
     end
@@ -125,8 +125,8 @@ describe RspecOtel::Matchers::EmitSpan do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
                             .start_span('test', attributes: {
-                                          'hello' => 'world'
-                                        })
+                              'hello' => 'world'
+                            })
         span.finish
       end.not_to emit_span('test').without_attributes({ 'hello' => 'world' })
     end
