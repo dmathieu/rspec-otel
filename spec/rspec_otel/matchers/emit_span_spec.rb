@@ -38,7 +38,7 @@ describe RspecOtel::Matchers::EmitSpan do
         span.finish
       end.to emit_span('GET ')
     end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-      "expected span named 'GET ' to have been emitted, but it couldn't be found")
+      "expected span named 'GET ' to have been emitted, but it couldn't be found. Found a close matching span named `POST /user`") # rubocop:disable Layout/LineLength
   end
 
   context 'when using a regular expression' do
@@ -63,7 +63,18 @@ describe RspecOtel::Matchers::EmitSpan do
           span.finish
         end.to emit_span(/^GET /)
       end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-        "expected span matching /^GET / to have been emitted, but it couldn't be found")
+        "expected span matching /^GET / to have been emitted, but it couldn't be found. Found a close matching span named `POST /user`") # rubocop:disable Layout/LineLength
+    end
+  end
+
+  context 'when no span were emitted' do
+    it 'has printed a sensible error message' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          # Nothing to do here
+        end.to emit_span(/^GET /)
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        'expected span matching /^GET / to have been emitted, but there were no spans emitted at all')
     end
   end
 

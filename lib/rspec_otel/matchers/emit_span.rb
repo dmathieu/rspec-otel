@@ -8,18 +8,18 @@ module RspecOtel
       def initialize(name = nil)
         @name = name
         @filters = []
+        @before_spans = []
 
-        add_name_filter
+        @filters << name_filter
       end
 
       def matches?(block)
-        before_spans = []
         if block.respond_to?(:call)
-          before_spans = RspecOtel.exporter.finished_spans
+          @before_spans = RspecOtel.exporter.finished_spans
           block.call
         end
 
-        (RspecOtel.exporter.finished_spans - before_spans).each do |span|
+        (RspecOtel.exporter.finished_spans - @before_spans).each do |span|
           return true if @filters.all? { |f| f.call(span) }
         end
 
@@ -110,7 +110,17 @@ module RspecOtel
       end
 
       def failure_message
-        "expected span #{failure_match_description} #{printable_name} to have been emitted, but it couldn't be found"
+        closest = closest_span
+        expect_content = "expected span #{failure_match_description} #{printable_name} to have been emitted"
+
+        case closest
+        when nil
+          "#{expect_content}, but there were no spans emitted at all"
+        when OpenTelemetry::SDK::Trace::SpanData
+          "#{expect_content}, but it couldn't be found. Found a close matching span named `#{closest.name}`"
+        else
+          raise "I don't know what to do with a #{closest.class} span"
+        end
       end
 
       def failure_message_when_negated
@@ -122,6 +132,15 @@ module RspecOtel
       end
 
       private
+
+      def closest_span
+        all_spans = (RspecOtel.exporter.finished_spans - @before_spans)
+        span = all_spans.filter_map do |s|
+          span if name_filter.call(s)
+        end.first
+        span = all_spans.first if span.nil?
+        span
+      end
 
       def failure_match_description
         case name
@@ -141,8 +160,8 @@ module RspecOtel
         end
       end
 
-      def add_name_filter
-        @filters << lambda do |span|
+      def name_filter
+        lambda do |span|
           case name
           when String
             span.name == name
