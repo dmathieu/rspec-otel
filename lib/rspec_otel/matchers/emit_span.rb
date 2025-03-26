@@ -9,18 +9,23 @@ module RspecOtel
         @name = name
         @filters = []
         @before_spans = []
+        @closest_span = nil
 
         @filters << name_filter
       end
 
-      def matches?(block)
+      def matches?(block) # rubocop:disable Metrics/MethodLength
         if block.respond_to?(:call)
           @before_spans = RspecOtel.exporter.finished_spans
           block.call
         end
 
+        closest_count = 0
         (RspecOtel.exporter.finished_spans - @before_spans).each do |span|
-          return true if @filters.all? { |f| f.call(span) }
+          count = @filters.count { |f| f.call(span) }
+          @closest_span = span if count > closest_count
+          closest_count = count
+          return true if count == @filters.count
         end
 
         false
@@ -134,12 +139,9 @@ module RspecOtel
       private
 
       def closest_span
-        all_spans = (RspecOtel.exporter.finished_spans - @before_spans)
-        span = all_spans.filter_map do |s|
-          span if name_filter.call(s)
-        end.first
-        span = all_spans.first if span.nil?
-        span
+        return @closest_span unless @closest_span.nil?
+
+        (RspecOtel.exporter.finished_spans - @before_spans).first
       end
 
       def failure_match_description
