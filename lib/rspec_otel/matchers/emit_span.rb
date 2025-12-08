@@ -175,9 +175,13 @@ module RspecOtel
 
       def exception_attributes(exception)
         attributes = {}
-        unless exception.nil?
+        return attributes if exception.nil?
+
+        if exception.is_a?(Exception)
           attributes['exception.type'] = exception.class.to_s
           attributes['exception.message'] = exception.message
+        else
+          attributes['exception.type'] = exception.to_s
         end
 
         attributes

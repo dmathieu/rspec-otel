@@ -230,6 +230,14 @@ describe RspecOtel::Matchers::EmitSpan do
       end.to emit_span('test').with_exception
     end
 
+    it 'matches a span with an exception class' do
+      expect do
+        span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
+        span.record_exception(StandardError.new('some error occured'))
+        span.finish
+      end.to emit_span('test').with_exception(StandardError)
+    end
+
     it 'does not match a span with a wrong exception' do
       expect do
         span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
