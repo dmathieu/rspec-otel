@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rspec-otel (0.0.6)
+    rspec-otel (0.0.7)
       opentelemetry-api (~> 1.0)
       opentelemetry-sdk (~> 1.0)
       opentelemetry-test-helpers
@@ -84,6 +84,7 @@ GEM
 PLATFORMS
   arm64-darwin-22
   arm64-darwin-23
+  arm64-darwin-25
   universal-java-17
   universal-java-21
   x86_64-linux
