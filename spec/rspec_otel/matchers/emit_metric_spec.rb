@@ -85,45 +85,41 @@ describe RspecOtel::Matchers::EmitMetric do
     end.not_to emit_metric('my.counter')
   end
 
-  it 'has printed a sensible error message when no metrics emitted' do # rubocop:disable RSpec/MultipleExpectations
-    expect do
-      expect do
-        # Nothing to do here
-      end.to emit_metric('my.counter')
-    end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-      "expected metric 'my.counter' to have been emitted, but no metrics were emitted at all")
+  it 'has printed a sensible error message when no metrics emitted' do
+    matcher = emit_metric('my.counter')
+    matcher.matches?(-> {})
+    expect(matcher.failure_message).to eq(
+      "expected metric 'my.counter' to have been emitted, but no metrics were emitted at all"
+    )
   end
 
-  it 'has printed a sensible error message when metric was emitted before the block' do # rubocop:disable RSpec/MultipleExpectations
+  it 'has printed a sensible error message when metric was emitted before the block' do
     # Observable metrics always report on every pull (cumulative), so they appear
     # in new_snapshots after the block with the same value → triggers @emitted_outside_block
     meter.create_observable_counter('my.observable_counter', callback: proc { 1 })
-    expect do
-      expect do
-        # metric already emitted before the block, nothing new inside
-      end.to emit_metric('my.observable_counter')
-    end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-      "expected metric 'my.observable_counter' to have been emitted within the block, but it was already emitted before")
+    matcher = emit_metric('my.observable_counter')
+    matcher.matches?(-> {})
+    expect(matcher.failure_message).to eq(
+      "expected metric 'my.observable_counter' to have been emitted within the block, but it was already emitted before"
+    )
   end
 
-  it 'has printed a sensible error message when metric emitted with wrong value' do # rubocop:disable RSpec/MultipleExpectations
-    expect do
-      expect do
-        meter.create_counter('my.counter').add(3)
-      end.to emit_metric('my.counter').with_value(5)
-    end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+  it 'has printed a sensible error message when metric emitted with wrong value' do
+    matcher = emit_metric('my.counter').with_value(5)
+    matcher.matches?(-> { meter.create_counter('my.counter').add(3) })
+    expect(matcher.failure_message).to eq(
       "expected metric 'my.counter' to have been emitted, but it couldn't be found. " \
-      'Found a close matching metric named `my.counter`')
+      'Found a close matching metric named `my.counter`'
+    )
   end
 
-  it 'has printed a sensible error message when wrong metric emitted' do # rubocop:disable RSpec/MultipleExpectations
-    expect do
-      expect do
-        meter.create_counter('other.counter').add(1)
-      end.to emit_metric('my.counter')
-    end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+  it 'has printed a sensible error message when wrong metric emitted' do
+    matcher = emit_metric('my.counter')
+    matcher.matches?(-> { meter.create_counter('other.counter').add(1) })
+    expect(matcher.failure_message).to eq(
       "expected metric 'my.counter' to have been emitted, but it couldn't be found. " \
-      'Found a close matching metric named `other.counter`')
+      'Found a close matching metric named `other.counter`'
+    )
   end
 
   context 'when using a regular expression' do
@@ -139,23 +135,21 @@ describe RspecOtel::Matchers::EmitMetric do
       end.not_to emit_metric(/^http\./)
     end
 
-    it 'has printed a sensible error message when no metrics emitted' do # rubocop:disable RSpec/MultipleExpectations
-      expect do
-        expect do
-          # Nothing to do here
-        end.to emit_metric(/^http\./)
-      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-        'expected metric /^http\\./ to have been emitted, but no metrics were emitted at all')
+    it 'has printed a sensible error message when no metrics emitted' do
+      matcher = emit_metric(/^http\./)
+      matcher.matches?(-> {})
+      expect(matcher.failure_message).to eq(
+        'expected metric /^http\\./ to have been emitted, but no metrics were emitted at all'
+      )
     end
 
-    it 'has printed a sensible error message when a close metric is found' do # rubocop:disable RSpec/MultipleExpectations
-      expect do
-        expect do
-          meter.create_counter('db.queries').add(1)
-        end.to emit_metric(/^http\./)
-      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-        'expected metric /^http\\./ to have been emitted, but it couldn\'t be found. ' \
-        'Found a close matching metric named `db.queries`')
+    it 'has printed a sensible error message when a close metric is found' do
+      matcher = emit_metric(/^http\./)
+      matcher.matches?(-> { meter.create_counter('db.queries').add(1) })
+      expect(matcher.failure_message).to eq(
+        "expected metric /^http\\./ to have been emitted, but it couldn't be found. " \
+        'Found a close matching metric named `db.queries`'
+      )
     end
   end
 
@@ -206,12 +200,10 @@ describe RspecOtel::Matchers::EmitMetric do
       end.not_to emit_metric('my.counter').with_value(5)
     end
 
-    it 'raises ArgumentError when used on a histogram' do # rubocop:disable RSpec/MultipleExpectations
-      expect do
-        expect do
-          meter.create_histogram('my.histogram').record(42)
-        end.to emit_metric('my.histogram').with_value(42)
-      end.to raise_error(ArgumentError, 'with_value is not supported for histogram data points')
+    it 'raises ArgumentError when used on a histogram' do
+      matcher = emit_metric('my.histogram').with_value(42)
+      expect { matcher.matches?(-> { meter.create_histogram('my.histogram').record(42) }) }
+        .to raise_error(ArgumentError, 'with_value is not supported for histogram data points')
     end
   end
 
@@ -250,13 +242,10 @@ describe RspecOtel::Matchers::EmitMetric do
   end
 
   context 'when negated' do
-    it 'has printed a sensible error message' do # rubocop:disable RSpec/MultipleExpectations
-      expect do
-        expect do
-          meter.create_counter('my.counter').add(1)
-        end.not_to emit_metric('my.counter')
-      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
-        "expected metric 'my.counter' to not have been emitted")
+    it 'has printed a sensible error message' do
+      matcher = emit_metric('my.counter')
+      matcher.matches?(-> { meter.create_counter('my.counter').add(1) })
+      expect(matcher.failure_message_when_negated).to eq("expected metric 'my.counter' to not have been emitted")
     end
   end
 end

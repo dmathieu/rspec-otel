@@ -2,7 +2,7 @@
 
 module RspecOtel
   module Matchers
-    class EmitSpan # rubocop:disable Metrics/ClassLength
+    class EmitSpan
       attr_reader :name
 
       def initialize(name = nil)
@@ -14,95 +14,55 @@ module RspecOtel
         @filters << name_filter
       end
 
-      def matches?(block) # rubocop:disable Metrics/MethodLength
-        if block.respond_to?(:call)
-          @before_spans = RspecOtel.exporter.finished_spans
-          block.call
-        end
-
-        closest_count = 0
-        (RspecOtel.exporter.finished_spans - @before_spans).each do |span|
-          count = @filters.count { |f| f.call(span) }
-          @closest_span = span if count > closest_count
-          closest_count = count
-          return true if count == @filters.count
-        end
-
-        false
+      def matches?(block)
+        capture_before_spans(block)
+        matching_span?
       end
 
       def as_child
-        @filters << lambda do |span|
-          span.parent_span_id && span.parent_span_id != OpenTelemetry::Trace::INVALID_SPAN_ID
-        end
-
+        @filters << ->(span) { span.parent_span_id && span.parent_span_id != OpenTelemetry::Trace::INVALID_SPAN_ID }
         self
       end
 
       def as_root
-        @filters << lambda do |span|
-          span.parent_span_id == OpenTelemetry::Trace::INVALID_SPAN_ID
-        end
-
+        @filters << ->(span) { span.parent_span_id == OpenTelemetry::Trace::INVALID_SPAN_ID }
         self
       end
 
       def with_attributes(attributes)
-        @filters << lambda do |span|
-          attributes_match?(span.attributes, attributes)
-        end
-
+        @filters << ->(span) { attributes_match?(span.attributes, attributes) }
         self
       end
 
       def without_attributes(attributes)
-        @filters << lambda do |span|
-          !attributes_match?(span.attributes, attributes)
-        end
-
+        @filters << ->(span) { !attributes_match?(span.attributes, attributes) }
         self
       end
 
       def with_link(attributes = {})
-        @filters << lambda do |span|
-          span.links &&
-            link_match?(span.links, attributes)
-        end
-
+        @filters << ->(span) { span.links && link_match?(span.links, attributes) }
         self
       end
 
       def without_link(attributes = {})
-        @filters << lambda do |span|
-          span.links.nil? ||
-            !link_match?(span.links, attributes)
-        end
-
+        @filters << ->(span) { span.links.nil? || !link_match?(span.links, attributes) }
         self
       end
 
       def with_event(name, attributes = {})
-        @filters << lambda do |span|
-          span.events &&
-            event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
-        end
-
+        event = OpenTelemetry::SDK::Trace::Event.new(name, attributes)
+        @filters << ->(span) { span.events && event_match?(span.events, event) }
         self
       end
 
       def without_event(name, attributes = {})
-        @filters << lambda do |span|
-          span.events.nil? ||
-            !event_match?(span.events, OpenTelemetry::SDK::Trace::Event.new(name, attributes))
-        end
-
+        event = OpenTelemetry::SDK::Trace::Event.new(name, attributes)
+        @filters << ->(span) { span.events.nil? || !event_match?(span.events, event) }
         self
       end
 
       def with_status(code, description)
-        @filters << lambda do |span|
-          status_match?(span.status, code, description)
-        end
+        @filters << ->(span) { status_match?(span.status, code, description) }
         self
       end
 
@@ -134,6 +94,24 @@ module RspecOtel
       end
 
       private
+
+      def capture_before_spans(block)
+        return unless block.respond_to?(:call)
+
+        @before_spans = RspecOtel.exporter.finished_spans
+        block.call
+      end
+
+      def matching_span?
+        closest_count = 0
+        (RspecOtel.exporter.finished_spans - @before_spans).each do |span|
+          count = @filters.count { |f| f.call(span) }
+          @closest_span = span if count > closest_count
+          closest_count = count
+          return true if count == @filters.count
+        end
+        false
+      end
 
       def closest_span
         return @closest_span unless @closest_span.nil?

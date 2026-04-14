@@ -2,7 +2,7 @@
 
 module RspecOtel
   module Matchers
-    class EmitMetric # rubocop:disable Metrics/ClassLength
+    class EmitMetric
       def initialize(name)
         @name = name
         @kind = nil
@@ -10,28 +10,13 @@ module RspecOtel
         @before_count = 0
         @pre_snapshot = {}
         @closest_metric = nil
+        @closest_filter_count = 0
         @emitted_outside_block = false
       end
 
-      def matches?(block) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-        if block.respond_to?(:call)
-          RspecOtel.metric_exporter.pull
-          @pre_snapshot = build_pre_snapshot(RspecOtel.metric_exporter.metric_snapshots)
-          @before_count = RspecOtel.metric_exporter.metric_snapshots.length
-          block.call
-          RspecOtel.metric_exporter.pull
-        end
-
-        new_snapshots.each do |metric_data|
-          next unless name_matches?(metric_data.name)
-          next unless kind_matches?(metric_data.instrument_kind)
-
-          return true if matching_data_point?(metric_data)
-
-          @closest_metric ||= metric_data
-        end
-
-        false
+      def matches?(block)
+        execute_block(block) if block.respond_to?(:call)
+        matching_metric?
       end
 
       def of_type(kind)
@@ -80,22 +65,46 @@ module RspecOtel
 
       private
 
-      def matching_data_point?(metric_data) # rubocop:disable Metrics/MethodLength
-        closest_count = 0
+      def execute_block(block)
+        RspecOtel.metric_exporter.pull
+        @pre_snapshot = build_pre_snapshot(RspecOtel.metric_exporter.metric_snapshots)
+        @before_count = RspecOtel.metric_exporter.metric_snapshots.length
+        block.call
+        RspecOtel.metric_exporter.pull
+      end
+
+      def matching_metric?
+        new_snapshots.each do |metric_data|
+          next unless name_matches?(metric_data.name)
+          next unless kind_matches?(metric_data.instrument_kind)
+
+          return true if matching_data_point?(metric_data)
+
+          @closest_metric ||= metric_data
+        end
+
+        false
+      end
+
+      def matching_data_point?(metric_data)
         any_changed = false
         metric_data.data_points.each do |data_point|
           next unless data_point_changed?(metric_data.name, metric_data.instrument_kind, data_point)
 
           any_changed = true
-          count = @filters.count { |f| f.call(data_point) }
-          if count > closest_count
-            @closest_metric = metric_data
-            closest_count = count
-          end
-          return true if count == @filters.length
+          return true if all_filters_match?(metric_data, data_point)
         end
         @emitted_outside_block ||= !any_changed
         false
+      end
+
+      def all_filters_match?(metric_data, data_point)
+        count = @filters.count { |f| f.call(data_point) }
+        if count > @closest_filter_count
+          @closest_metric = metric_data
+          @closest_filter_count = count
+        end
+        count == @filters.length
       end
 
       def data_point_changed?(metric_name, instrument_kind, data_point)

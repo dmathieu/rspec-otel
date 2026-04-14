@@ -21,3 +21,9 @@ RSpec/ExampleLength:
 
 Layout/ArgumentAlignment:
   EnforcedStyle: with_fixed_indentation
+
+Metrics/ClassLength:
+  Max: 200
+
+RSpec/MultipleExpectations:
+  Max: 2
