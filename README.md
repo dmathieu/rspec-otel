@@ -73,6 +73,46 @@ Several conditions can be added to the matcher:
 _The `*_event` condition can be called multiple times with different events._
 
 
+### Matching the presence of a metric
+
+You can match the emission of a metric with the `emit_metric` matcher:
+
+```ruby
+require 'spec_helper'
+
+RSpec.describe 'User API' do
+  it 'emits a metric' do
+    expect do
+      get :user, id: 1
+    end.to emit_metric('http.server.duration')
+  end
+end
+```
+
+`emit_metric` will also match a regular expression:
+
+```ruby
+expect do
+  get :user, id: 1
+end.to emit_metric(/^http\.server\./)
+```
+
+Several conditions can be added to the matcher:
+
+* `of_type` - Will match only metrics of the specified instrument kind (`:counter`, `:histogram`, `:gauge`, `:up_down_counter`, `:observable_counter`, `:observable_gauge`, `:observable_up_down_counter`).
+* `with_attributes` - Will match only the metrics with the specified attributes on a data point.
+* `without_attributes` - Will only match the metrics that do not have the specified attributes on any data point.
+* `with_value` - Will match only the metrics where a data point has the specified value (applies to counters, gauges, and up-down counters).
+
+```ruby
+expect do
+  get :user, id: 1
+end.to emit_metric('http.server.duration')
+       .of_type(:histogram)
+       .with_attributes({ 'http.request.method' => 'GET' })
+```
+
+
 ### Disabling
 
 We wrap every example in a new OpenTelemetry SDK configuration by default, if you wish to disable this you can tag your example with `:rspec_otel_disable_tracing`:
