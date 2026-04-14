@@ -109,7 +109,7 @@ describe RspecOtel::Matchers::EmitMetric do
     matcher.matches?(-> { meter.create_counter('my.counter').add(3) })
     expect(matcher.failure_message).to eq(
       "expected metric 'my.counter' to have been emitted, but it couldn't be found. " \
-      'Found a close matching metric named `my.counter`'
+      "Found a close matching metric named `my.counter`\n  type: counter\n  data_points:\n    - value: 3"
     )
   end
 
@@ -118,7 +118,26 @@ describe RspecOtel::Matchers::EmitMetric do
     matcher.matches?(-> { meter.create_counter('other.counter').add(1) })
     expect(matcher.failure_message).to eq(
       "expected metric 'my.counter' to have been emitted, but it couldn't be found. " \
-      'Found a close matching metric named `other.counter`'
+      "Found a close matching metric named `other.counter`\n  type: counter\n  data_points:\n    - value: 1"
+    )
+  end
+
+  it 'has printed a sensible error message when the closest metric has attributes' do
+    matcher = emit_metric('my.counter').with_attributes({ 'env' => 'test' })
+    matcher.matches?(-> { meter.create_counter('my.counter').add(2, attributes: { 'env' => 'production' }) })
+    expect(matcher.failure_message).to eq(
+      "expected metric 'my.counter' to have been emitted, but it couldn't be found. " \
+      'Found a close matching metric named `my.counter`' \
+      "\n  type: counter\n  data_points:\n    - value: 2 {\"env\" => \"production\"}"
+    )
+  end
+
+  it 'has printed a sensible error message when the closest metric is a histogram' do
+    matcher = emit_metric('my.histogram').with_attributes({ 'env' => 'test' })
+    matcher.matches?(-> { meter.create_histogram('my.histogram').record(42) })
+    expect(matcher.failure_message).to eq(
+      "expected metric 'my.histogram' to have been emitted, but it couldn't be found. " \
+      "Found a close matching metric named `my.histogram`\n  type: histogram\n  data_points:\n    - count: 1"
     )
   end
 
@@ -148,7 +167,7 @@ describe RspecOtel::Matchers::EmitMetric do
       matcher.matches?(-> { meter.create_counter('db.queries').add(1) })
       expect(matcher.failure_message).to eq(
         "expected metric /^http\\./ to have been emitted, but it couldn't be found. " \
-        'Found a close matching metric named `db.queries`'
+        "Found a close matching metric named `db.queries`\n  type: counter\n  data_points:\n    - value: 1"
       )
     end
   end
