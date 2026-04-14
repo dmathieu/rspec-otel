@@ -2,10 +2,15 @@
 
 require 'opentelemetry/sdk'
 require 'opentelemetry-test-helpers'
+require 'opentelemetry-metrics-sdk'
 
 module RspecOtel
   def self.exporter
     @exporter ||= OpenTelemetry::SDK::Trace::Export::InMemorySpanExporter.new
+  end
+
+  def self.metric_exporter
+    @metric_exporter ||= OpenTelemetry::SDK::Metrics::Export::InMemoryMetricPullExporter.new
   end
 
   def self.record
@@ -15,6 +20,10 @@ module RspecOtel
       c.add_span_processor span_processor
     end
 
+    meter_provider = OpenTelemetry::SDK::Metrics::MeterProvider.new
+    meter_provider.add_metric_reader(metric_exporter)
+    OpenTelemetry.meter_provider = meter_provider
+
     yield
   ensure
     reset
@@ -22,7 +31,9 @@ module RspecOtel
 
   def self.reset
     OpenTelemetry::TestHelpers.reset_opentelemetry
+    OpenTelemetry.meter_provider = OpenTelemetry::Internal::ProxyMeterProvider.new
     @exporter = nil
+    @metric_exporter = nil
   end
 end
 

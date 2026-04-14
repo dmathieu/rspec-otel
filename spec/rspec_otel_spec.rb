@@ -39,6 +39,20 @@ describe RspecOtel do
       end
     end
 
+    it "doesn't leak metrics across subsequent calls" do # rubocop:disable RSpec/MultipleExpectations
+      described_class.record do
+        meter = OpenTelemetry.meter_provider.meter('rspec-otel')
+        meter.create_counter('first').add(1)
+        described_class.metric_exporter.pull
+        expect(described_class.metric_exporter.metric_snapshots.map(&:name)).to include('first')
+      end
+
+      described_class.record do
+        described_class.metric_exporter.pull
+        expect(described_class.metric_exporter.metric_snapshots.map(&:name)).not_to include('first')
+      end
+    end
+
     it "doesn't record unwrapped examples" do
       OpenTelemetry.tracer_provider.tracer('rspec-otel').in_span('test') do
         expect(OpenTelemetry::Trace.current_span).not_to be_recording
