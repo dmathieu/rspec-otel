@@ -103,6 +103,7 @@ Several conditions can be added to the matcher:
 * `with_attributes` - Will match only the metrics with the specified attributes on a data point.
 * `without_attributes` - Will only match the metrics that do not have the specified attributes on any data point.
 * `with_value` - Will match only the metrics where a data point has the specified value (applies to counters, gauges, and up-down counters).
+* `with_count` - Will match only the metrics where a histogram data point has the specified recording count (applies to histograms only).
 
 ```ruby
 expect do

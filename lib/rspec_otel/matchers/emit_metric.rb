@@ -43,6 +43,15 @@ module RspecOtel
         self
       end
 
+      def with_count(count)
+        @filters << lambda { |dp|
+          raise ArgumentError, 'with_count is only supported for histogram data points' if dp.respond_to?(:value)
+
+          dp.count == count
+        }
+        self
+      end
+
       def failure_message
         closest = @closest_metric || new_snapshots.first
         if closest.nil?

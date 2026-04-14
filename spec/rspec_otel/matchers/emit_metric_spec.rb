@@ -226,6 +226,34 @@ describe RspecOtel::Matchers::EmitMetric do
     end
   end
 
+  context 'with count' do
+    it 'matches when the count is correct' do
+      expect do
+        h = meter.create_histogram('my.histogram')
+        h.record(10)
+        h.record(20)
+      end.to emit_metric('my.histogram').with_count(2)
+    end
+
+    it 'does not match when the count differs' do
+      expect do
+        meter.create_histogram('my.histogram').record(10)
+      end.not_to emit_metric('my.histogram').with_count(3)
+    end
+
+    it 'raises ArgumentError when used on a non-histogram' do
+      matcher = emit_metric('my.counter').with_count(1)
+      expect { matcher.matches?(-> { meter.create_counter('my.counter').add(1) }) }
+        .to raise_error(ArgumentError, 'with_count is only supported for histogram data points')
+    end
+
+    it 'can be chained with with_attributes' do
+      expect do
+        meter.create_histogram('my.histogram').record(5, attributes: { 'env' => 'test' })
+      end.to emit_metric('my.histogram').with_attributes({ 'env' => 'test' }).with_count(1)
+    end
+  end
+
   context 'when combining matchers' do
     it 'matches when both attributes and value are correct' do
       expect do
