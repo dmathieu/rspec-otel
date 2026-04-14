@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    rspec-otel (0.0.8)
+    rspec-otel (0.1.0)
       logger
       opentelemetry-api (~> 1.0)
       opentelemetry-metrics-sdk (~> 0.12)
