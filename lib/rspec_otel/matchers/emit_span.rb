@@ -116,15 +116,12 @@ module RspecOtel
 
       def failure_message
         closest = closest_span
-        expect_content = "expected span #{failure_match_description} #{printable_name} to have been emitted"
+        prefix = "expected span #{failure_match_description} #{printable_name} to have been emitted"
 
         case closest
-        when nil
-          "#{expect_content}, but there were no spans emitted at all"
-        when OpenTelemetry::SDK::Trace::SpanData
-          "#{expect_content}, but it couldn't be found. Found a close matching span named `#{closest.name}`"
-        else
-          raise "I don't know what to do with a #{closest.class} span"
+        when nil then "#{prefix}, but there were no spans emitted at all"
+        when OpenTelemetry::SDK::Trace::SpanData then closest_not_found_message(prefix, closest)
+        else raise "I don't know what to do with a #{closest.class} span"
         end
       end
 
@@ -218,6 +215,11 @@ module RspecOtel
         end
 
         !link.empty?
+      end
+
+      def closest_not_found_message(prefix, span)
+        "#{prefix}, but it couldn't be found. " \
+          "Found a close matching span named `#{span.name}`#{SpanDetails.new(span)}"
       end
     end
   end

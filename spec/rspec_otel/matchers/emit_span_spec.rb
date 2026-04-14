@@ -78,6 +78,114 @@ describe RspecOtel::Matchers::EmitSpan do
     end
   end
 
+  context 'when printing details of a close matching span' do
+    it 'includes attributes in the failure message' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+                              .start_span('POST /user', attributes: { 'hello' => 'world' })
+          span.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        "Found a close matching span named `POST /user`\n  " \
+        'attributes: {"hello" => "world"}')
+    end
+
+    it 'includes events without attributes in the failure message' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+          span.add_event('something happened')
+          span.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        "Found a close matching span named `POST /user`\n  events:\n    " \
+        '- something happened')
+    end
+
+    it 'includes events with attributes in the failure message' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+          span.add_event('something happened', attributes: { 'key' => 'value' })
+          span.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        "Found a close matching span named `POST /user`\n  events:\n    " \
+        '- something happened {"key" => "value"}')
+    end
+
+    it 'includes links in the failure message' do # rubocop:disable RSpec/ExampleLength, RSpec/MultipleExpectations
+      expect do
+        expect do
+          parent = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('parent')
+          link = OpenTelemetry::Trace::Link.new(parent.context, { 'foo' => 'bar' })
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user', links: [link])
+          span.finish
+          parent.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        "Found a close matching span named `POST /user`\n  links:\n    " \
+        '- link {"foo" => "bar"}')
+    end
+
+    it 'includes error status in the failure message' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+          span.status = OpenTelemetry::Trace::Status.error('something went wrong')
+          span.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        "Found a close matching span named `POST /user`\n  " \
+        'status: error (something went wrong)')
+    end
+
+    it 'includes ok status in the failure message' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+          span.status = OpenTelemetry::Trace::Status.ok
+          span.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        "Found a close matching span named `POST /user`\n  " \
+        'status: ok')
+    end
+
+    it 'omits status when unset' do # rubocop:disable RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('POST /user')
+          span.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        'Found a close matching span named `POST /user`')
+    end
+
+    it 'includes all details when present' do # rubocop:disable RSpec/ExampleLength, RSpec/MultipleExpectations
+      expect do
+        expect do
+          span = OpenTelemetry.tracer_provider.tracer('rspec-otel')
+                              .start_span('POST /user', attributes: { 'hello' => 'world' })
+          span.add_event('something happened')
+          span.status = OpenTelemetry::Trace::Status.error('oops')
+          span.finish
+        end.to emit_span('GET ')
+      end.to raise_error(RSpec::Expectations::ExpectationNotMetError,
+        "expected span named 'GET ' to have been emitted, but it couldn't be found. " \
+        "Found a close matching span named `POST /user`\n  attributes: {\"hello\" => \"world\"}\n  " \
+        "events:\n    - something happened\n  status: error (oops)")
+    end
+  end
+
   describe 'without a block' do
     before do
       span = OpenTelemetry.tracer_provider.tracer('rspec-otel').start_span('test')
