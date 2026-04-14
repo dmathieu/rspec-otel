@@ -51,7 +51,7 @@ module RspecOtel
           "expected metric #{printable_name} to have been emitted within the block, but it was already emitted before"
         else
           "expected metric #{printable_name} to have been emitted, but it couldn't be found. " \
-            "Found a close matching metric named `#{closest.name}`"
+            "Found a close matching metric named `#{closest.name}`#{MetricDetails.new(closest)}"
         end
       end
 
