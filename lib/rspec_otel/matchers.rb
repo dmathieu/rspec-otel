@@ -9,3 +9,4 @@ module RspecOtel
 end
 
 require 'rspec_otel/matchers/emit_span'
+require 'rspec_otel/matchers/span_details'
